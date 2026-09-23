@@ -253,7 +253,7 @@
                             <tr>
                                 <td colspan="5" class="py-12 text-center text-stone-400">
                                     <div class="flex flex-col items-center justify-center space-y-2">
-                                        <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                        <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                         <p class="text-xs font-semibold">Belum ada pelamar masuk.</p>
                                     </div>
                                 </td>
@@ -325,15 +325,17 @@
                         </div>
                     </div>
 
-                    <!-- Lokasi Penempatan -->
+                    <!-- Lokasi Penempatan (Terpisah: Central Kitchen dan Office To Meet Cafe) -->
                     <div>
                         <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Lokasi Outlet Penempatan</label>
                         <select 
                             wire:model="location_name" 
                             class="w-full border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-800 focus:outline-none focus:border-[#8c5a3c] focus:ring-1 focus:ring-[#8c5a3c] transition font-medium"
                         >
-                            <option value="Heavenland Park">Heavenland Park</option>
+                            <option value="Central Kitchen">Central Kitchen</option>
+                            <option value="Office To Meet Cafe">Office To Meet Cafe</option>
                             <option value="Pondok Mutiara">Pondok Mutiara</option>
+                            <option value="Heavenland Park">Heavenland Park</option>
                             <option value="Semua Lokasi">Semua Lokasi</option>
                         </select>
                     </div>
