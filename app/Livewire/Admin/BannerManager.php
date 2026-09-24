@@ -7,25 +7,35 @@ use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
 use App\Models\Banner;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Collection;
 
 class BannerManager extends Component
 {
     use WithFileUploads;
 
+    /**
+     * @var Collection<int, Banner>
+     */
     public $banners;
-    public $isOpen = false;
-    public $bannerId = null;
-    public $page_key = 'home';
-    public $title = '';
-    public $subtitle = '';
-    public $image;
-    public $oldImage;
-    public $is_active = true;
-    public $successMessage = '';
-    public $selectedFilter = 'all';
+
+    public bool $isOpen = false;
+    public ?int $bannerId = null;
+    public string $page_key = 'home';
+    public string $title = '';
+    public string $subtitle = '';
+
+    /**
+     * @var mixed
+     */
+    public $image = null;
+
+    public ?string $oldImage = null;
+    public bool $is_active = true;
+    public string $successMessage = '';
+    public string $selectedFilter = 'all';
 
     // Daftar semua target halaman
-    public $pageOptions = [
+    public array $pageOptions = [
         'home' => 'Homepage Utama',
         'about' => 'About Us (Tentang Kami)',
         'menu' => 'Digital Menu',
@@ -41,12 +51,32 @@ class BannerManager extends Component
         'faq' => 'FAQ (Tanya Jawab)',
     ];
 
-    public function mount()
+    protected function rules(): array
+    {
+        return [
+            'page_key' => 'required|string',
+            'title' => 'nullable|string',
+            'subtitle' => 'nullable|string',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:5120',
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'page_key.required' => 'Mohon tentukan halaman target untuk penempatan banner.',
+            'image.file' => 'Berkas yang diunggah tidak valid.',
+            'image.mimes' => 'Format berkas tidak didukung. Mohon gunakan berkas berekstensi PNG, JPG, JPEG, atau WebP.',
+            'image.max' => 'Ukuran berkas melebihi kapasitas yang diizinkan (maksimal 5 MB). Silakan gunakan gambar dengan resolusi yang telah dikompresi.',
+        ];
+    }
+
+    public function mount(): void
     {
         $this->loadBanners();
     }
 
-    public function loadBanners()
+    public function loadBanners(): void
     {
         $query = Banner::query();
         if ($this->selectedFilter !== 'all') {
@@ -55,33 +85,38 @@ class BannerManager extends Component
         $this->banners = $query->latest()->get();
     }
 
-    public function updatedSelectedFilter()
+    public function updatedSelectedFilter(): void
     {
         $this->loadBanners();
     }
 
-    public function openModal($id = null)
+    public function updatedImage(): void
+    {
+        $this->validateOnly('image');
+    }
+
+    public function openModal(?int $id = null): void
     {
         $this->resetForm();
         if ($id) {
             $banner = Banner::findOrFail($id);
-            $this->bannerId = $banner->id;
-            $this->page_key = $banner->page_key;
-            $this->title = $banner->title;
-            $this->subtitle = $banner->subtitle;
+            $this->bannerId = (int) $banner->id;
+            $this->page_key = (string) $banner->page_key;
+            $this->title = (string) ($banner->title ?? '');
+            $this->subtitle = (string) ($banner->subtitle ?? '');
             $this->oldImage = $banner->image;
             $this->is_active = (bool) $banner->is_active;
         }
         $this->isOpen = true;
     }
 
-    public function closeModal()
+    public function closeModal(): void
     {
         $this->isOpen = false;
         $this->resetForm();
     }
 
-    private function resetForm()
+    private function resetForm(): void
     {
         $this->bannerId = null;
         $this->page_key = 'home';
@@ -93,14 +128,9 @@ class BannerManager extends Component
         $this->resetValidation();
     }
 
-    public function save()
+    public function save(): void
     {
-        $this->validate([
-            'page_key' => 'required|string',
-            'title' => 'nullable|string',
-            'subtitle' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
-        ]);
+        $this->validate();
 
         $imagePath = $this->oldImage;
         if ($this->image) {
@@ -120,7 +150,7 @@ class BannerManager extends Component
             ]
         );
 
-        $this->successMessage = 'Banner berhasil disimpan!';
+        $this->successMessage = 'Konfigurasi banner berhasil diperbarui.';
         $this->loadBanners();
         $this->closeModal();
     }
