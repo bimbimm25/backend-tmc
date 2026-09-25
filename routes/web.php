@@ -60,3 +60,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/posts', PostManager::class)->name('posts.index');
     Route::get('/banners', BannerManager::class)->name('banners');
 });
+
+\Livewire\Livewire::setUpdateRoute(function ($handle) {
+	return Route::post('/livewire/update', $handle)->middleware(['web']);
+});
+
+\Livewire\Livewire::setUpdateRoute(function ($handle) {
+    return Route::post('/livewire/update', $handle)->middleware(['web']);
+});
+
