@@ -1,7 +1,10 @@
 <div x-data="{ 
         modalOpen: @entangle('isOpen'),
         uploadError: '',
-        validateFile(event) {
+        isUploading: false,
+        uploadTimeout: null,
+
+        startUploadWatch(event) {
             this.uploadError = '';
             const file = event.target.files[0];
             if (!file) return;
@@ -10,43 +13,70 @@
             const maxSize = 3 * 1024 * 1024; // 3 MB
 
             if (!allowedTypes.includes(file.type)) {
-                this.uploadError = 'Format berkas tidak didukung. Mohon gunakan format gambar standar (PNG, JPG, JPEG, atau WebP).';
+                this.uploadError = 'Format gambar tidak didukung. Mohon gunakan file berformat PNG, JPG, atau WebP.';
                 event.target.value = '';
                 return;
             }
 
             if (file.size > maxSize) {
-                this.uploadError = 'Ukuran berkas melebihi batas maksimum (3 MB). Silakan kompresi gambar terlebih dahulu.';
+                this.uploadError = 'Ukuran gambar terlalu besar (lebih dari 3 MB). Silakan gunakan gambar yang lebih kecil atau kompresi terlebih dahulu.';
                 event.target.value = '';
                 return;
             }
+
+            // Mulai hitung mundur batas waktu (15 detik) untuk mendeteksi server/koneksi macet
+            this.isUploading = true;
+            clearTimeout(this.uploadTimeout);
+            this.uploadTimeout = setTimeout(() => {
+                if (this.isUploading) {
+                    this.isUploading = false;
+                    this.uploadError = 'Server sedang sibuk atau mengalami gangguan saat menerima gambar. Silakan tunggu beberapa saat lalu coba unggah ulang.';
+                    if ($refs.imageInput) $refs.imageInput.value = '';
+                }
+            }, 15000);
+        },
+
+        handleUploadFinish() {
+            this.isUploading = false;
+            clearTimeout(this.uploadTimeout);
+        },
+
+        handleUploadError() {
+            this.isUploading = false;
+            clearTimeout(this.uploadTimeout);
+            this.uploadError = 'Gagal terhubung ke server. Berkas gambar mungkin melebihi kapasitas maksimal yang diizinkan oleh sistem server, atau koneksi Anda terputus. Silakan coba lagi.';
+            if ($refs.imageInput) $refs.imageInput.value = '';
         }
-    }" x-init="
+    }" 
+    x-init="
         $watch('modalOpen', value => {
             if (value) {
                 document.body.style.overflow = 'hidden';
                 uploadError = '';
+                isUploading = false;
+                clearTimeout(uploadTimeout);
             } else {
                 document.body.style.overflow = '';
+                clearTimeout(uploadTimeout);
             }
         });
-    " class="space-y-6 text-stone-800">
+    " 
+    x-on:livewire-upload-finish="handleUploadFinish()"
+    x-on:livewire-upload-error="handleUploadError()"
+    class="space-y-6 text-stone-800">
 
     {{-- Flash Toast Notification Sukses --}}
     @if($successMessage)
-        <div
-            class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm rounded-2xl flex items-center justify-between shadow-xs">
+        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm rounded-2xl flex items-center justify-between shadow-xs">
             <div class="flex items-center gap-2.5">
-                <div
-                    class="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                <div class="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
                 <span class="font-semibold">{{ $successMessage }}</span>
             </div>
-            <button wire:click="$set('successMessage', '')"
-                class="text-emerald-500 hover:text-emerald-800 p-1 cursor-pointer">
+            <button wire:click="$set('successMessage', '')" class="text-emerald-500 hover:text-emerald-800 p-1 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -55,12 +85,10 @@
     @endif
 
     {{-- Header Action & Filter Bar --}}
-    <div
-        class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-stone-200/80 shadow-xs">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-stone-200/80 shadow-xs">
         <div>
             <h2 class="text-base sm:text-lg font-black text-stone-900">Kelola Banner Tiap Halaman</h2>
-            <p class="text-xs text-stone-500 font-medium">Ubah foto hero banner dan teks tiap page. Mendukung tag
-                &lt;br&gt; untuk enter/baris baru.</p>
+            <p class="text-xs text-stone-500 font-medium">Ubah foto hero banner dan teks tiap page. Mendukung tag &lt;br&gt; untuk enter/baris baru.</p>
         </div>
 
         <div class="flex items-center gap-2.5">
@@ -86,12 +114,10 @@
     {{-- Cards Grid Daftar Banner Tiap Page --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         @forelse($banners as $item)
-            <div
-                class="bg-white rounded-3xl border border-stone-200/80 shadow-xs p-4 space-y-3 flex flex-col justify-between hover:border-[#8c5a3c] transition duration-200">
+            <div class="bg-white rounded-3xl border border-stone-200/80 shadow-xs p-4 space-y-3 flex flex-col justify-between hover:border-[#8c5a3c] transition duration-200">
                 <div class="space-y-2.5">
                     <div class="flex items-center justify-between">
-                        <span
-                            class="px-2.5 py-0.5 bg-amber-50 text-[#8c5a3c] border border-amber-200/60 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                        <span class="px-2.5 py-0.5 bg-amber-50 text-[#8c5a3c] border border-amber-200/60 rounded-lg text-[10px] font-black uppercase tracking-wider">
                             {{ $pageOptions[$item->page_key] ?? $item->page_key }}
                         </span>
                         <span class="text-[10px] font-bold {{ $item->is_active ? 'text-emerald-600' : 'text-stone-400' }}">
@@ -100,11 +126,9 @@
                     </div>
 
                     {{-- Preview Banner --}}
-                    <div
-                        class="w-full aspect-video bg-stone-100 rounded-2xl overflow-hidden border border-stone-200 flex items-center justify-center relative">
+                    <div class="w-full aspect-video bg-stone-100 rounded-2xl overflow-hidden border border-stone-200 flex items-center justify-center relative">
                         @if($item->image)
-                            <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->page_key }}"
-                                class="w-full h-full object-cover">
+                            <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->page_key }}" class="w-full h-full object-cover">
                         @else
                             <span class="text-[11px] text-stone-400 font-semibold">Belum ada gambar banner</span>
                         @endif
@@ -129,8 +153,7 @@
                 </div>
 
                 <div class="pt-2.5 border-t border-stone-100 flex items-center justify-between">
-                    <span class="text-[10px] text-stone-400 font-medium">Diperbarui:
-                        {{ $item->updated_at->format('d M Y') }}</span>
+                    <span class="text-[10px] text-stone-400 font-medium">Diperbarui: {{ $item->updated_at->format('d M Y') }}</span>
                     <button wire:click="openModal({{ $item->id }})"
                         class="px-3 py-1.5 bg-stone-100 hover:bg-[#8c5a3c] hover:text-white text-stone-700 text-xs font-bold rounded-xl transition cursor-pointer">
                         Edit Banner
@@ -146,17 +169,14 @@
 
     {{-- MODAL TAMBAH/EDIT BANNER --}}
     @if($isOpen)
-        <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-xs p-3 sm:p-4 overflow-hidden">
-            <div
-                class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-stone-100 transform transition-all my-auto">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-xs p-3 sm:p-4 overflow-hidden">
+            <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-stone-100 transform transition-all my-auto">
                 <div class="px-5 py-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/70">
                     <div>
                         <h3 class="font-bold text-stone-900 text-sm">
                             {{ $bannerId ? 'Edit Banner Halaman' : 'Tambah Banner Halaman' }}
                         </h3>
-                        <p class="text-[10px] text-stone-500 font-medium">Gunakan tag <code>&lt;br&gt;</code> atau tombol
-                            Enter untuk membuat baris baru.</p>
+                        <p class="text-[10px] text-stone-500 font-medium">Gunakan tag <code>&lt;br&gt;</code> atau tombol Enter untuk membuat baris baru.</p>
                     </div>
                     <button type="button" wire:click="closeModal"
                         class="p-1.5 text-stone-400 hover:text-stone-700 rounded-xl hover:bg-stone-100 transition cursor-pointer">
@@ -168,7 +188,7 @@
 
                 <form wire:submit.prevent="save" class="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
                     
-                    {{-- Alert Peringatan Error Profesional Client-Side --}}
+                    {{-- Alert Peringatan Error Profesional & Awam --}}
                     <div x-show="uploadError" x-cloak
                         class="p-3.5 bg-rose-50 border border-rose-200/80 rounded-2xl flex items-start gap-3 text-rose-800 text-xs shadow-2xs">
                         <div class="w-5 h-5 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
@@ -178,10 +198,10 @@
                             </svg>
                         </div>
                         <div class="flex-1">
-                            <span class="font-bold block">Pemberitahuan Sistem</span>
+                            <span class="font-bold block">Gagal Mengunggah Gambar</span>
                             <span class="text-[11px] leading-relaxed text-rose-700" x-text="uploadError"></span>
                         </div>
-                        <button type="button" @click="uploadError = ''" class="text-rose-400 hover:text-rose-700 p-0.5">
+                        <button type="button" @click="uploadError = ''" class="text-rose-400 hover:text-rose-700 p-0.5 cursor-pointer">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -190,8 +210,7 @@
 
                     {{-- Target Halaman Website --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Target
-                            Halaman Website</label>
+                        <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Target Halaman Website</label>
                         <select wire:model="page_key"
                             class="w-full border border-stone-200 rounded-2xl px-3.5 py-2.5 text-xs text-stone-800 focus:outline-none focus:border-[#8c5a3c] transition font-semibold cursor-pointer">
                             @foreach($pageOptions as $key => $label)
@@ -203,8 +222,7 @@
                     {{-- Judul Banner --}}
                     <div>
                         <div class="flex items-center justify-between mb-1">
-                            <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider">Judul
-                                Banner</label>
+                            <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider">Judul Banner</label>
                             <span class="text-[10px] text-[#8c5a3c] font-bold">Mendukung &lt;br&gt; / Enter</span>
                         </div>
                         <textarea wire:model="title" rows="2" placeholder="Contoh: TO MEET<br>Universe"
@@ -214,8 +232,7 @@
                     {{-- Deskripsi / Subtitle --}}
                     <div>
                         <div class="flex items-center justify-between mb-1">
-                            <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider">Deskripsi /
-                                Subtitle</label>
+                            <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider">Deskripsi / Subtitle</label>
                             <span class="text-[10px] text-[#8c5a3c] font-bold">Mendukung &lt;br&gt; / Enter</span>
                         </div>
                         <textarea wire:model="subtitle" rows="3" placeholder="Contoh: A cozy cafe,<br>a world of friends..."
@@ -224,22 +241,27 @@
 
                     {{-- Upload Gambar Banner --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Upload
-                            Gambar Banner Rasio 16:9 (Maks. 3 MB)</label>
+                        <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Upload Gambar Banner Rasio 16:9 (Maks. 3 MB)</label>
                         <div class="space-y-2">
                             <input type="file" 
+                                x-ref="imageInput"
                                 wire:model="image" 
                                 accept="image/png,image/jpeg,image/jpg,image/webp"
-                                @change="validateFile($event)"
+                                @change="startUploadWatch($event)"
                                 class="w-full text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-[#8c5a3c] hover:file:bg-amber-100 transition cursor-pointer">
 
-                            {{-- Indikator Sedang Memproses Upload (Livewire Loading) --}}
-                            <div wire:loading wire:target="image" class="w-full p-2.5 bg-amber-50 border border-amber-200/80 rounded-xl flex items-center gap-2 text-amber-800 text-[11px] font-medium animate-pulse">
-                                <svg class="w-4 h-4 animate-spin text-[#8c5a3c]" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                </svg>
-                                <span>Sedang memproses dan mengunggah gambar banner, mohon tunggu...</span>
+                            {{-- Indikator Loading + Tombol Batalkan --}}
+                            <div x-show="isUploading" x-cloak class="w-full p-2.5 bg-amber-50 border border-amber-200/80 rounded-xl flex items-center justify-between text-amber-800 text-[11px] font-medium animate-pulse">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 animate-spin text-[#8c5a3c]" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
+                                    <span>Sedang mengunggah gambar ke server, mohon tunggu...</span>
+                                </div>
+                                <button type="button" @click="handleUploadError()" class="text-amber-700 hover:text-amber-900 underline text-[10px] font-bold cursor-pointer">
+                                    Batalkan
+                                </button>
                             </div>
 
                             @if ($image)
@@ -282,6 +304,7 @@
                         <button type="submit"
                             wire:loading.attr="disabled"
                             wire:target="image, save"
+                            :disabled="isUploading"
                             class="px-5 py-2 bg-[#8c5a3c] hover:bg-[#73482f] text-white text-xs font-bold rounded-2xl shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
                             <span wire:loading.remove wire:target="save">Simpan Banner</span>
                             <span wire:loading wire:target="save">Menyimpan...</span>
