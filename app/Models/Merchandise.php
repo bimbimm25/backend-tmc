@@ -20,6 +20,7 @@ class Merchandise extends Model
         'purchase_type',
         'image',
         'is_featured',
+        'is_best_seller',
     ];
 
     protected $casts = [

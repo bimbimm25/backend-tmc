@@ -28,10 +28,11 @@ class MerchandiseManager extends Component
     public string $description = '';
     public string $price = '';
     public string $stock_status = 'available';
-    public string $purchase_type = 'in_store'; // <-- Gunakan value sesuai database constraint
+    public string $purchase_type = 'in_store';
     public mixed $image = null;
     public ?string $oldImage = null;
     public bool $is_featured = false;
+    public bool $is_best_seller = false; // <-- Field Best Seller
 
     // Modal Kategori
     public bool $isCategoryOpen = false;
@@ -79,6 +80,7 @@ class MerchandiseManager extends Component
         $this->image = null;
         $this->oldImage = null;
         $this->is_featured = false;
+        $this->is_best_seller = false; // <-- Reset status ke false
         $this->resetValidation();
     }
 
@@ -93,6 +95,7 @@ class MerchandiseManager extends Component
             'purchase_type' => 'required|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'is_featured' => 'boolean',
+            'is_best_seller' => 'boolean', // <-- Validasi boolean
         ]);
 
         $imagePath = $this->oldImage;
@@ -116,6 +119,7 @@ class MerchandiseManager extends Component
                 'purchase_type' => $this->purchase_type,
                 'image' => $imagePath,
                 'is_featured' => $this->is_featured,
+                'is_best_seller' => $this->is_best_seller, // <-- Simpan ke database
             ]
         );
 
@@ -133,7 +137,7 @@ class MerchandiseManager extends Component
         $this->price = (string) $item->price;
         $this->stock_status = $item->stock_status ?? 'available';
 
-        // Handle konversi value lama ke value constraint jika diperlukan
+        // Konversi value lama ke value constraint
         $pType = $item->purchase_type ?? 'in_store';
         if ($pType === 'In Store')
             $pType = 'in_store';
@@ -145,6 +149,7 @@ class MerchandiseManager extends Component
 
         $this->oldImage = $item->image;
         $this->is_featured = (bool) $item->is_featured;
+        $this->is_best_seller = (bool) $item->is_best_seller; // <-- Load nilai dari model
 
         $this->isOpen = true;
     }
@@ -168,6 +173,7 @@ class MerchandiseManager extends Component
         $this->editingCategoryId = null;
         $this->resetValidation();
     }
+
     public function closeCategoryModal(): void
     {
         $this->isCategoryOpen = false;
@@ -199,12 +205,14 @@ class MerchandiseManager extends Component
         $this->editingCategoryId = $cat->id;
         $this->categoryName = $cat->name;
     }
+
     public function cancelEditCategory(): void
     {
         $this->editingCategoryId = null;
         $this->categoryName = '';
         $this->resetValidation();
     }
+
     public function deleteCategory(int $id): void
     {
         Category::where('type', 'merchandise')->findOrFail($id)->delete();

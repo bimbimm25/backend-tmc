@@ -121,8 +121,12 @@
                     @endif
 
                     <div class="min-w-0">
-                        <div class="font-bold text-stone-900 text-xs truncate flex items-center gap-1.5">
+                        <div class="font-bold text-stone-900 text-xs truncate flex flex-wrap items-center gap-1.5">
                             <span class="truncate">{{ $item->name }}</span>
+                            @if($item->is_best_seller)
+                                <span
+                                    class="px-1.5 py-0.2 text-[8px] bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded shrink-0">Best Seller</span>
+                            @endif
                             @if($item->is_featured)
                                 <span
                                     class="px-1.5 py-0.2 text-[8px] bg-amber-50 text-amber-800 border border-amber-200 font-bold rounded shrink-0">Featured</span>
@@ -221,8 +225,12 @@
 
                             <!-- Nama Produk & Kategori -->
                             <td class="py-3 px-4">
-                                <div class="font-bold text-stone-900 text-xs sm:text-sm flex items-center gap-2">
+                                <div class="font-bold text-stone-900 text-xs sm:text-sm flex flex-wrap items-center gap-1.5">
                                     <span>{{ $item->name }}</span>
+                                    @if($item->is_best_seller)
+                                        <span
+                                            class="px-2 py-0.5 text-[10px] bg-rose-50 text-rose-700 border border-rose-200/80 font-bold rounded-md">Best Seller</span>
+                                    @endif
                                     @if($item->is_featured)
                                         <span
                                             class="px-2 py-0.5 text-[10px] bg-amber-50 text-amber-800 border border-amber-200/80 font-bold rounded-md">Featured</span>
@@ -524,13 +532,17 @@
                         class="text-[10px] text-rose-600 mt-0.5 block font-medium">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Highlight Featured Checkbox -->
-                    <div class="pt-1">
+                    <!-- Best Seller & Featured Checkboxes -->
+                    <div class="pt-1 space-y-2 bg-stone-50/80 p-2.5 rounded-xl border border-stone-200/60">
                         <label class="flex items-center gap-2 text-xs font-semibold text-stone-700 cursor-pointer">
-                            <input type="checkbox" wire:model="is_featured"
-                                class="rounded border-stone-300 text-[#8c5a3c] focus:ring-[#8c5a3c] w-3.5 h-3.5">
-                            <span>Tampilkan di Highlight Homepage (Featured)</span>
+                            <input type="checkbox" wire:model="is_best_seller"
+                                class="rounded border-stone-300 text-rose-600 focus:ring-rose-500 w-3.5 h-3.5">
+                            <span class="flex items-center gap-1.5">
+                                <span>Tandai sebagai Produk Terlaris (Best Seller)</span>
+                                <span class="px-1.5 py-0.2 text-[8px] bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded">HOT</span>
+                            </span>
                         </label>
+
                     </div>
 
                     <!-- Form Footer Buttons -->
