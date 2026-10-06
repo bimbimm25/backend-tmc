@@ -82,7 +82,7 @@
 
         <!-- Action Buttons -->
         <div class="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto flex-col sm:flex-row">
-            <!-- Button Kelola Kategori -->
+            <!-- Button Kelola & Geser Kategori -->
             <button wire:click="openCategoryModal"
                 class="w-full sm:w-auto px-3.5 py-2 bg-stone-100 hover:bg-stone-200/80 text-stone-700 text-xs font-bold rounded-xl transition duration-150 border border-stone-200/80 flex items-center justify-center gap-2 shrink-0 cursor-pointer">
                 <svg class="w-4 h-4 text-stone-600" fill="none" stroke="currentColor" stroke-width="2"
@@ -98,7 +98,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Tambah Menu Baru</span>
+                <span>Menu Baru</span>
             </button>
         </div>
 
@@ -125,7 +125,6 @@
                 <tbody class="divide-y divide-stone-100 text-xs">
                     @forelse($menus as $menu)
                         <tr class="hover:bg-stone-50/60 transition duration-150">
-                            <!-- Image Thumbnail -->
                             <td class="py-3 px-4">
                                 @if($menu->image)
                                     <img src="{{ asset('storage/' . $menu->image) }}"
@@ -138,13 +137,11 @@
                                 @endif
                             </td>
 
-                            <!-- Name & Category -->
                             <td class="py-3 px-4">
                                 <div class="font-bold text-stone-900 text-xs sm:text-sm">{{ $menu->name }}</div>
                                 <div class="text-[11px] font-semibold text-[#8c5a3c] mt-0.5">{{ $menu->category }}</div>
                             </td>
 
-                            <!-- Location Badge -->
                             <td class="py-3 px-4">
                                 @if($menu->location === 'heavenland')
                                     <span
@@ -164,12 +161,10 @@
                                 @endif
                             </td>
 
-                            <!-- Price -->
                             <td class="py-3 px-4 font-extrabold text-stone-800">
                                 Rp {{ number_format($menu->price, 0, ',', '.') }}
                             </td>
 
-                            <!-- Opsi Pembelian -->
                             <td class="py-3 px-4">
                                 <span
                                     class="px-2.5 py-1 text-[10px] font-bold bg-stone-100 text-stone-700 rounded-lg border border-stone-200">
@@ -177,7 +172,6 @@
                                 </span>
                             </td>
 
-                            <!-- Badges -->
                             <td class="py-3 px-4">
                                 <div class="flex flex-wrap gap-1">
                                     @if($menu->is_featured)
@@ -204,7 +198,6 @@
                                 </div>
                             </td>
 
-                            <!-- Action Buttons -->
                             <td class="py-3 px-4 text-right">
                                 <div class="flex items-center justify-end gap-1">
                                     <button wire:click="edit({{ $menu->id }})"
@@ -290,7 +283,6 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-1 pt-1">
-                        <!-- Location Badge -->
                         @if($menu->location === 'heavenland')
                             <span
                                 class="px-2 py-0.5 text-[9px] bg-amber-50 text-amber-800 border border-amber-200 font-bold rounded-md">Heavenland
@@ -305,7 +297,6 @@
                                 Outlet</span>
                         @endif
 
-                        <!-- Opsi Pembelian Badge Mobile -->
                         <span
                             class="px-2 py-0.5 text-[9px] bg-stone-100 text-stone-700 border border-stone-200 font-bold rounded-md">
                             {{ $menu->purchase_option ?? 'Dine In Only' }}
@@ -338,17 +329,24 @@
         {{ $menus->links() }}
     </div>
 
-    {{-- MODAL 1: KELOLA KATEGORI MENU --}}
+    {{-- ========================================================= --}}
+    {{-- MODAL 1: KELOLA & DRAG & DROP REORDERING KATEGORI MENU     --}}
+    {{-- ========================================================= --}}
     @if($isCategoryOpen)
         <div
             class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-xs p-3 sm:p-4 overflow-hidden">
             <div
-                class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-stone-100 transform transition-all my-auto">
+                class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-stone-100 transform transition-all my-auto flex flex-col max-h-[90vh]">
 
-                <div class="px-5 py-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/60">
+                <div class="px-5 py-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/60 shrink-0">
                     <div>
-                        <h3 class="font-bold text-stone-900 text-sm">Kelola Kategori Menu</h3>
-                        <p class="text-[10px] text-stone-500 font-medium">Tambah, ubah, atau hapus kategori menu disini.</p>
+                        <h3 class="font-bold text-stone-900 text-sm flex items-center gap-2">
+                            <span>Kelola & Urutkan Kategori</span>
+                            <span class="px-2 py-0.5 text-[9.5px] font-bold bg-[#FAF0E6] text-[#8c5a3c] rounded-full border border-[#e6ccb2]/60">
+                                {{ count($categories) }} Kategori
+                            </span>
+                        </h3>
+                        <p class="text-[10.5px] text-stone-500 font-medium">Tekan & tahan ikon titik enam (⋮⋮) untuk menggeser urutan posisi menu.</p>
                     </div>
                     <button type="button" wire:click="closeCategoryModal"
                         class="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition cursor-pointer">
@@ -358,18 +356,18 @@
                     </button>
                 </div>
 
-                <div class="p-4 sm:p-5 space-y-4">
+                <div class="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
                     <!-- Form Input/Edit Kategori -->
-                    <form wire:submit.prevent="saveCategory" class="space-y-2">
-                        <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider">
+                    <form wire:submit.prevent="saveCategory" class="space-y-2 bg-[#FAF0E6]/30 p-3 sm:p-3.5 rounded-xl border border-[#e6ccb2]/50">
+                        <label class="block text-[10px] font-black text-[#8c5a3c] uppercase tracking-wider">
                             {{ $editingCategoryId ? 'Edit Nama Kategori' : 'Tambah Kategori Baru' }}
                         </label>
                         <div class="flex gap-2">
-                            <input type="text" wire:model="categoryName" placeholder="Contoh: Coffee, Dessert..."
-                                class="flex-1 border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-800 focus:outline-none focus:border-[#8c5a3c] focus:ring-1 focus:ring-[#8c5a3c] transition font-medium">
+                            <input type="text" wire:model="categoryName" placeholder="Contoh: Teddy Meal, Coffee, Dessert..."
+                                class="flex-1 bg-white border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-800 focus:outline-none focus:border-[#8c5a3c] focus:ring-1 focus:ring-[#8c5a3c] transition font-medium">
                             <button type="submit"
-                                class="px-3.5 py-1.5 bg-[#8c5a3c] hover:bg-[#73482f] text-white text-xs font-bold rounded-xl transition cursor-pointer shrink-0">
-                                {{ $editingCategoryId ? 'Update' : 'Tambah' }}
+                                class="px-4 py-1.5 bg-[#8c5a3c] hover:bg-[#73482f] text-white text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs">
+                                {{ $editingCategoryId ? 'Simpan' : 'Tambah' }}
                             </button>
                             @if($editingCategoryId)
                                 <button type="button" wire:click="cancelEditCategory"
@@ -378,33 +376,89 @@
                                 </button>
                             @endif
                         </div>
-                        @error('categoryName') <span
-                        class="text-[10px] text-rose-600 block font-medium">{{ $message }}</span> @enderror
+                        @error('categoryName') 
+                            <span class="text-[10px] text-rose-600 block font-medium">{{ $message }}</span> 
+                        @enderror
                     </form>
 
-                    <!-- List Daftar Kategori -->
-                    <div class="space-y-1.5 pt-2 border-t border-stone-100">
-                        <span class="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">Daftar Kategori
-                            Tersedia</span>
+                    <!-- List Daftar Kategori dengan DRAG & DROP (SortableJS + Alpine) -->
+                    <div class="space-y-2 pt-1">
+                        <div class="flex items-center justify-between">
+                            <span class="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                                Urutan Tampilan (Drag & Drop)
+                            </span>
+                            <span class="text-[9.5px] text-[#8c5a3c] font-semibold flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                </svg>
+                                Tekan & Geser Baris
+                            </span>
+                        </div>
 
-                        <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1 text-xs">
-                            @forelse($categories as $cat)
+                        {{-- Wadah SortableJS --}}
+                        <div 
+                            x-data="{
+                                initSortable() {
+                                    if (typeof Sortable === 'undefined') return;
+                                    new Sortable(this.$refs.sortableContainer, {
+                                        animation: 200,
+                                        ghostClass: 'opacity-40',
+                                        dragClass: 'bg-[#FAF0E6]',
+                                        handle: '.drag-handle',
+                                        onEnd: (evt) => {
+                                            const items = Array.from(this.$refs.sortableContainer.children);
+                                            const orderedIds = items.map(el => el.getAttribute('data-id'));
+                                            $wire.reorderCategories(orderedIds);
+                                        }
+                                    });
+                                }
+                            }" 
+                            x-init="initSortable()"
+                            x-ref="sortableContainer"
+                            class="space-y-1.5 text-xs select-none"
+                        >
+                            @forelse($categories as $index => $cat)
                                 <div
-                                    class="flex items-center justify-between p-2 rounded-xl bg-stone-50/80 border border-stone-200/60 transition">
-                                    <span class="font-bold text-stone-800">{{ $cat->name }}</span>
-                                    <div class="flex items-center gap-1">
-                                        <button wire:click="editCategory({{ $cat->id }})"
-                                            class="p-1 text-stone-500 hover:text-[#8c5a3c] hover:bg-white rounded-lg transition cursor-pointer"
-                                            title="Edit Kategori">
+                                    data-id="{{ $cat->id }}"
+                                    class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-stone-200 hover:border-[#8c5a3c]/60 shadow-2xs transition group cursor-grab active:cursor-grabbing"
+                                >
+                                    <!-- Kolom Kiri: Drag Handle + Nomor Urut + Nama -->
+                                    <div class="flex items-center gap-2.5 min-w-0 pr-2 drag-handle w-full">
+                                        <!-- Ikon Drag Handle Titik Enam -->
+                                        <div class="text-stone-300 group-hover:text-[#8c5a3c] transition shrink-0 p-0.5">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                <circle cx="8" cy="6" r="2" />
+                                                <circle cx="16" cy="6" r="2" />
+                                                <circle cx="8" cy="12" r="2" />
+                                                <circle cx="16" cy="12" r="2" />
+                                                <circle cx="8" cy="18" r="2" />
+                                                <circle cx="16" cy="18" r="2" />
+                                            </svg>
+                                        </div>
+
+                                        <span class="w-6 h-6 rounded-lg bg-stone-100 text-stone-600 text-[10px] font-black flex items-center justify-center shrink-0 border border-stone-200/80">
+                                            {{ $index + 1 }}
+                                        </span>
+                                        <span class="font-bold text-stone-900 truncate">{{ $cat->name }}</span>
+                                    </div>
+
+                                    <!-- Kolom Kanan: Tombol Edit & Hapus -->
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <!-- Tombol Edit -->
+                                        <button type="button" wire:click="editCategory({{ $cat->id }})"
+                                            class="p-1.5 text-stone-500 hover:text-[#8c5a3c] hover:bg-stone-100 rounded-lg transition cursor-pointer"
+                                            title="Edit Nama Kategori">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </button>
-                                        <button wire:click="deleteCategory({{ $cat->id }})"
+
+                                        <!-- Tombol Hapus -->
+                                        <button type="button" wire:click="deleteCategory({{ $cat->id }})"
                                             wire:confirm="Hapus kategori '{{ $cat->name }}'?"
-                                            class="p-1 text-stone-400 hover:text-rose-600 hover:bg-white rounded-lg transition cursor-pointer"
+                                            class="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                                             title="Hapus Kategori">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
                                                 viewBox="0 0 24 24">
@@ -415,15 +469,19 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="text-[11px] text-stone-400 text-center py-3">Belum ada kategori ditambahkan.</p>
+                                <div class="text-center py-6 bg-stone-50 rounded-xl border border-dashed border-stone-200">
+                                    <p class="text-[11px] text-stone-400">Belum ada kategori yang ditambahkan.</p>
+                                </div>
                             @endforelse
                         </div>
                     </div>
                 </div>
 
-                <div class="px-5 py-3 border-t border-stone-100 bg-stone-50/50 flex justify-end">
+                <div class="px-5 py-3 border-t border-stone-100 bg-stone-50/50 flex justify-end shrink-0">
                     <button type="button" wire:click="closeCategoryModal"
-                        class="px-3.5 py-1.5 bg-stone-200 hover:bg-stone-300/80 text-stone-700 text-xs font-bold rounded-xl transition cursor-pointer">Tutup</button>
+                        class="px-4 py-2 bg-[#8c5a3c] hover:bg-[#73482f] text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-xs">
+                        Selesai
+                    </button>
                 </div>
             </div>
         </div>
@@ -453,7 +511,6 @@
 
                 <form wire:submit.prevent="save" class="p-4 sm:p-5 space-y-3.5 max-h-[80vh] overflow-y-auto">
 
-                    <!-- Pilihan Kategori & Nama Menu -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Kategori
@@ -480,7 +537,6 @@
                         </div>
                     </div>
 
-                    <!-- Pilihan Lokasi Outlet -->
                     <div>
                         <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">
                             Ketersediaan Lokasi / Outlet
@@ -497,7 +553,6 @@
                         class="text-[10px] text-rose-600 mt-0.5 block font-medium">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Harga & Opsi Pembelian (Dine In Only / Take Away / Keduanya) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Harga
@@ -523,7 +578,6 @@
                         </div>
                     </div>
 
-                    <!-- Deskripsi -->
                     <div>
                         <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Deskripsi
                             Singkat</label>
@@ -532,7 +586,6 @@
                             placeholder="Penjelasan bahan atau cita rasa menu..."></textarea>
                     </div>
 
-                    <!-- Foto Produk -->
                     <div>
                         <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Foto
                             Produk</label>
@@ -551,7 +604,6 @@
                         class="text-[10px] text-rose-600 mt-0.5 block font-medium">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Checkbox Status -->
                     <div class="flex flex-wrap items-center gap-5 pt-1">
                         <label class="flex items-center gap-2 text-xs font-semibold text-stone-700 cursor-pointer">
                             <input type="checkbox" wire:model="is_featured"
@@ -582,3 +634,4 @@
         </div>
     @endif
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>

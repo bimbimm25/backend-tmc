@@ -89,7 +89,7 @@
                     viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                <span>Kelola Kategori</span>
+                <span>Kelola & Geser Kategori</span>
             </button>
 
             <!-- Button Tambah Merchandise -->
@@ -125,7 +125,8 @@
                             <span class="truncate">{{ $item->name }}</span>
                             @if($item->is_best_seller)
                                 <span
-                                    class="px-1.5 py-0.2 text-[8px] bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded shrink-0">Best Seller</span>
+                                    class="px-1.5 py-0.2 text-[8px] bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded shrink-0">Best
+                                    Seller</span>
                             @endif
                             @if($item->is_featured)
                                 <span
@@ -140,7 +141,6 @@
                         </div>
 
                         <div class="flex flex-wrap items-center gap-1 mt-1">
-                            <!-- Opsi Pembelian -->
                             <span class="px-1.5 py-0.2 text-[8px] bg-stone-100 text-stone-700 font-semibold rounded">
                                 @if($item->purchase_type === 'in_store' || $item->purchase_type === 'In Store')
                                     In Store
@@ -151,7 +151,6 @@
                                 @endif
                             </span>
 
-                            <!-- Status Stok -->
                             @if($item->stock_status === 'available')
                                 <span
                                     class="px-1.5 py-0.2 text-[8px] bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold rounded">Ready</span>
@@ -166,7 +165,6 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons Mobile -->
                 <div class="flex items-center gap-1 shrink-0">
                     <button wire:click="edit({{ $item->id }})"
                         class="p-2 text-stone-600 hover:text-[#8c5a3c] bg-stone-50 rounded-xl transition cursor-pointer">
@@ -210,7 +208,6 @@
                 <tbody class="divide-y divide-stone-100 text-xs">
                     @forelse($merchandises as $item)
                         <tr class="hover:bg-stone-50/60 transition duration-150">
-                            <!-- Thumbnail -->
                             <td class="py-3 px-4">
                                 @if($item->image)
                                     <img src="{{ asset('storage/' . $item->image) }}"
@@ -223,13 +220,14 @@
                                 @endif
                             </td>
 
-                            <!-- Nama Produk & Kategori -->
                             <td class="py-3 px-4">
-                                <div class="font-bold text-stone-900 text-xs sm:text-sm flex flex-wrap items-center gap-1.5">
+                                <div
+                                    class="font-bold text-stone-900 text-xs sm:text-sm flex flex-wrap items-center gap-1.5">
                                     <span>{{ $item->name }}</span>
                                     @if($item->is_best_seller)
                                         <span
-                                            class="px-2 py-0.5 text-[10px] bg-rose-50 text-rose-700 border border-rose-200/80 font-bold rounded-md">Best Seller</span>
+                                            class="px-2 py-0.5 text-[10px] bg-rose-50 text-rose-700 border border-rose-200/80 font-bold rounded-md">Best
+                                            Seller</span>
                                     @endif
                                     @if($item->is_featured)
                                         <span
@@ -239,12 +237,10 @@
                                 <div class="text-[11px] font-semibold text-[#8c5a3c] mt-0.5">{{ $item->category }}</div>
                             </td>
 
-                            <!-- Harga -->
                             <td class="py-3 px-4 font-extrabold text-stone-800">
                                 Rp {{ number_format($item->price, 0, ',', '.') }}
                             </td>
 
-                            <!-- Opsi Pembelian -->
                             <td class="py-3 px-4">
                                 <span class="px-2 py-1 text-[11px] bg-stone-100 text-stone-700 rounded-lg font-semibold">
                                     @if($item->purchase_type === 'in_store' || $item->purchase_type === 'In Store')
@@ -257,7 +253,6 @@
                                 </span>
                             </td>
 
-                            <!-- Status Stok -->
                             <td class="py-3 px-4">
                                 @if($item->stock_status === 'available')
                                     <span
@@ -272,7 +267,6 @@
                                 @endif
                             </td>
 
-                            <!-- Action Buttons -->
                             <td class="py-3 px-4 text-right">
                                 <div class="flex items-center justify-end gap-1">
                                     <button wire:click="edit({{ $item->id }})"
@@ -321,17 +315,27 @@
         {{ $merchandises->links() }}
     </div>
 
-    {{-- MODAL 1: KELOLA KATEGORI MERCHANDISE --}}
+    {{-- ============================================================= --}}
+    {{-- MODAL 1: KELOLA & DRAG & DROP REORDERING KATEGORI MERCHANDISE --}}
+    {{-- ============================================================= --}}
     @if($isCategoryOpen)
         <div
             class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-xs p-3 sm:p-4 overflow-hidden">
             <div
-                class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-stone-100 transform transition-all my-auto">
+                class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-stone-100 transform transition-all my-auto flex flex-col max-h-[90vh]">
 
-                <div class="px-5 py-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/60">
+                <div
+                    class="px-5 py-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/60 shrink-0">
                     <div>
-                        <h3 class="font-bold text-stone-900 text-sm">Kelola Kategori Merchandise</h3>
-                        <p class="text-[10px] text-stone-500 font-medium">Tambah, ubah, atau hapus kategori disini.</p>
+                        <h3 class="font-bold text-stone-900 text-sm flex items-center gap-2">
+                            <span>Kelola & Urutkan Kategori</span>
+                            <span
+                                class="px-2 py-0.5 text-[9.5px] font-bold bg-[#FAF0E6] text-[#8c5a3c] rounded-full border border-[#e6ccb2]/60">
+                                {{ count($categories) }} Kategori
+                            </span>
+                        </h3>
+                        <p class="text-[10.5px] text-stone-500 font-medium">Tekan & tahan ikon titik enam (⋮⋮) untuk
+                            menggeser urutan posisi merchandise.</p>
                     </div>
                     <button type="button" wire:click="closeCategoryModal"
                         class="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition cursor-pointer">
@@ -341,18 +345,19 @@
                     </button>
                 </div>
 
-                <div class="p-4 sm:p-5 space-y-4">
+                <div class="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
                     <!-- Form Input/Edit Kategori -->
-                    <form wire:submit.prevent="saveCategory" class="space-y-2">
-                        <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider">
+                    <form wire:submit.prevent="saveCategory"
+                        class="space-y-2 bg-[#FAF0E6]/30 p-3 sm:p-3.5 rounded-xl border border-[#e6ccb2]/50">
+                        <label class="block text-[10px] font-black text-[#8c5a3c] uppercase tracking-wider">
                             {{ $editingCategoryId ? 'Edit Nama Kategori' : 'Tambah Kategori Baru' }}
                         </label>
                         <div class="flex gap-2">
-                            <input type="text" wire:model="categoryName" placeholder="Contoh: Plushie, Keychain..."
-                                class="flex-1 border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-800 focus:outline-none focus:border-[#8c5a3c] focus:ring-1 focus:ring-[#8c5a3c] transition font-medium">
+                            <input type="text" wire:model="categoryName" placeholder="Contoh: Plushie, Keychain, Tumbler..."
+                                class="flex-1 bg-white border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-800 focus:outline-none focus:border-[#8c5a3c] focus:ring-1 focus:ring-[#8c5a3c] transition font-medium">
                             <button type="submit"
-                                class="px-3.5 py-1.5 bg-[#8c5a3c] hover:bg-[#73482f] text-white text-xs font-bold rounded-xl transition cursor-pointer shrink-0">
-                                {{ $editingCategoryId ? 'Update' : 'Tambah' }}
+                                class="px-4 py-1.5 bg-[#8c5a3c] hover:bg-[#73482f] text-white text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs">
+                                {{ $editingCategoryId ? 'Simpan' : 'Tambah' }}
                             </button>
                             @if($editingCategoryId)
                                 <button type="button" wire:click="cancelEditCategory"
@@ -361,33 +366,82 @@
                                 </button>
                             @endif
                         </div>
-                        @error('categoryName') <span
-                        class="text-[10px] text-rose-600 block font-medium">{{ $message }}</span> @enderror
+                        @error('categoryName')
+                            <span class="text-[10px] text-rose-600 block font-medium">{{ $message }}</span>
+                        @enderror
                     </form>
 
-                    <!-- List Daftar Kategori -->
-                    <div class="space-y-1.5 pt-2 border-t border-stone-100">
-                        <span class="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">Daftar Kategori
-                            Tersedia</span>
+                    <!-- List Daftar Kategori dengan DRAG & DROP (SortableJS + Alpine) -->
+                    <div class="space-y-2 pt-1">
+                        <div class="flex items-center justify-between">
+                            <span class="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                                Urutan Tampilan (Drag & Drop)
+                            </span>
+                            <span class="text-[9.5px] text-[#8c5a3c] font-semibold flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                </svg>
+                                Tekan & Geser Baris
+                            </span>
+                        </div>
 
-                        <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1 text-xs">
-                            @forelse($categories as $cat)
-                                <div
-                                    class="flex items-center justify-between p-2 rounded-xl bg-stone-50/80 border border-stone-200/60 transition">
-                                    <span class="font-bold text-stone-800">{{ $cat->name }}</span>
-                                    <div class="flex items-center gap-1">
-                                        <button wire:click="editCategory({{ $cat->id }})"
-                                            class="p-1 text-stone-500 hover:text-[#8c5a3c] hover:bg-white rounded-lg transition cursor-pointer"
-                                            title="Edit Kategori">
+                        {{-- Wadah SortableJS --}}
+                        <div x-data="{
+                                    initSortable() {
+                                        if (typeof Sortable === 'undefined') return;
+                                        new Sortable(this.$refs.sortableContainer, {
+                                            animation: 200,
+                                            ghostClass: 'opacity-40',
+                                            dragClass: 'bg-[#FAF0E6]',
+                                            handle: '.drag-handle',
+                                            onEnd: (evt) => {
+                                                const items = Array.from(this.$refs.sortableContainer.children);
+                                                const orderedIds = items.map(el => el.getAttribute('data-id'));
+                                                $wire.reorderCategories(orderedIds);
+                                            }
+                                        });
+                                    }
+                                }" x-init="initSortable()" x-ref="sortableContainer"
+                            class="space-y-1.5 text-xs select-none">
+                            @forelse($categories as $index => $cat)
+                                <div data-id="{{ $cat->id }}"
+                                    class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-stone-200 hover:border-[#8c5a3c]/60 shadow-2xs transition group cursor-grab active:cursor-grabbing">
+                                    <!-- Kolom Kiri: Drag Handle + Nomor Urut + Nama -->
+                                    <div class="flex items-center gap-2.5 min-w-0 pr-2 drag-handle w-full">
+                                        <div class="text-stone-300 group-hover:text-[#8c5a3c] transition shrink-0 p-0.5">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                <circle cx="8" cy="6" r="2" />
+                                                <circle cx="16" cy="6" r="2" />
+                                                <circle cx="8" cy="12" r="2" />
+                                                <circle cx="16" cy="12" r="2" />
+                                                <circle cx="8" cy="18" r="2" />
+                                                <circle cx="16" cy="18" r="2" />
+                                            </svg>
+                                        </div>
+
+                                        <span
+                                            class="w-6 h-6 rounded-lg bg-stone-100 text-stone-600 text-[10px] font-black flex items-center justify-center shrink-0 border border-stone-200/80">
+                                            {{ $index + 1 }}
+                                        </span>
+                                        <span class="font-bold text-stone-900 truncate">{{ $cat->name }}</span>
+                                    </div>
+
+                                    <!-- Kolom Kanan: Tombol Edit & Hapus -->
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <button type="button" wire:click="editCategory({{ $cat->id }})"
+                                            class="p-1.5 text-stone-500 hover:text-[#8c5a3c] hover:bg-stone-100 rounded-lg transition cursor-pointer"
+                                            title="Edit Nama Kategori">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </button>
-                                        <button wire:click="deleteCategory({{ $cat->id }})"
+
+                                        <button type="button" wire:click="deleteCategory({{ $cat->id }})"
                                             wire:confirm="Hapus kategori '{{ $cat->name }}'?"
-                                            class="p-1 text-stone-400 hover:text-rose-600 hover:bg-white rounded-lg transition cursor-pointer"
+                                            class="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                                             title="Hapus Kategori">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
                                                 viewBox="0 0 24 24">
@@ -398,15 +452,19 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="text-[11px] text-stone-400 text-center py-3">Belum ada kategori ditambahkan.</p>
+                                <div class="text-center py-6 bg-stone-50 rounded-xl border border-dashed border-stone-200">
+                                    <p class="text-[11px] text-stone-400">Belum ada kategori merchandise yang ditambahkan.</p>
+                                </div>
                             @endforelse
                         </div>
                     </div>
                 </div>
 
-                <div class="px-5 py-3 border-t border-stone-100 bg-stone-50/50 flex justify-end">
+                <div class="px-5 py-3 border-t border-stone-100 bg-stone-50/50 flex justify-end shrink-0">
                     <button type="button" wire:click="closeCategoryModal"
-                        class="px-3.5 py-1.5 bg-stone-200 hover:bg-stone-300/80 text-stone-700 text-xs font-bold rounded-xl transition cursor-pointer">Tutup</button>
+                        class="px-4 py-2 bg-[#8c5a3c] hover:bg-[#73482f] text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-xs">
+                        Selesai
+                    </button>
                 </div>
             </div>
         </div>
@@ -437,7 +495,6 @@
 
                 <form wire:submit.prevent="save" class="p-4 sm:p-5 space-y-3 max-h-[80vh] overflow-y-auto">
 
-                    <!-- Kategori & Nama Merchandise -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Kategori
@@ -464,7 +521,6 @@
                         </div>
                     </div>
 
-                    <!-- Harga & Status Stok -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Harga
@@ -490,7 +546,6 @@
                         </div>
                     </div>
 
-                    <!-- Opsi Pembelian -->
                     <div>
                         <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Opsi
                             Pembelian</label>
@@ -504,7 +559,6 @@
                         class="text-[10px] text-rose-600 mt-0.5 block font-medium">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Deskripsi Produk -->
                     <div>
                         <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Deskripsi
                             Singkat</label>
@@ -513,7 +567,6 @@
                             placeholder="Penjelasan bahan atau spesifikasi produk..."></textarea>
                     </div>
 
-                    <!-- Upload Foto -->
                     <div>
                         <label class="block text-[10px] font-bold text-stone-800 uppercase tracking-wider mb-1">Foto
                             Merchandise</label>
@@ -532,20 +585,18 @@
                         class="text-[10px] text-rose-600 mt-0.5 block font-medium">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Best Seller & Featured Checkboxes -->
                     <div class="pt-1 space-y-2 bg-stone-50/80 p-2.5 rounded-xl border border-stone-200/60">
                         <label class="flex items-center gap-2 text-xs font-semibold text-stone-700 cursor-pointer">
                             <input type="checkbox" wire:model="is_best_seller"
                                 class="rounded border-stone-300 text-rose-600 focus:ring-rose-500 w-3.5 h-3.5">
                             <span class="flex items-center gap-1.5">
                                 <span>Tandai sebagai Produk Terlaris (Best Seller)</span>
-                                <span class="px-1.5 py-0.2 text-[8px] bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded">HOT</span>
+                                <span
+                                    class="px-1.5 py-0.2 text-[8px] bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded">HOT</span>
                             </span>
                         </label>
-
                     </div>
 
-                    <!-- Form Footer Buttons -->
                     <div class="pt-3 flex justify-end gap-2 border-t border-stone-100">
                         <button type="button" wire:click="closeModal"
                             class="px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200/80 text-stone-700 text-xs font-bold rounded-xl transition cursor-pointer">Batal</button>
@@ -558,3 +609,4 @@
         </div>
     @endif
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>

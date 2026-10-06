@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Menu;
+use App\Models\Category; // <-- DITAMBAHKAN
 use App\Models\Merchandise;
 use App\Models\Event;
 use App\Models\RobloxMission;
@@ -48,7 +49,7 @@ Route::get('/home-data', function () {
 
 
 // ==========================================
-// 1. MODUL DIGITAL MENU
+// 1. MODUL DIGITAL MENU & KATEGORI TERURUT
 // ==========================================
 Route::get('/menus', function (Request $request) {
     $category = $request->query('category');
@@ -61,6 +62,22 @@ Route::get('/menus', function (Request $request) {
         'status' => 'success',
         'message' => 'Berhasil mengambil data menu',
         'data' => $menus
+    ], 200);
+});
+
+// Endpoint Kategori Menu Terurut (Sesuai Drag & Drop Dashboard)
+Route::get('/categories', function (Request $request) {
+    $type = $request->query('type', 'menu');
+
+    $categories = Category::where('type', $type)
+        ->orderBy('order', 'asc')
+        ->orderBy('id', 'asc')
+        ->get();
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Berhasil mengambil daftar kategori terurut',
+        'data' => $categories
     ], 200);
 });
 
@@ -175,7 +192,7 @@ Route::post('/careers/apply', function (Request $request) {
     try {
         Mail::to($ownerEmail)->send(new NewApplicantNotification($application));
     } catch (\Exception $e) {
-        
+
     }
 
     return response()->json([

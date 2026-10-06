@@ -27,7 +27,7 @@ class MenuManager extends Component
     public string $name = '';
     public string $description = '';
     public string $price = '';
-    public string $purchase_option = 'Dine In Only'; // <-- Default disesuaikan
+    public string $purchase_option = 'Dine In Only';
     public string $location = 'all';
     public mixed $image = null;
     public ?string $oldImage = null;
@@ -44,9 +44,18 @@ class MenuManager extends Component
 
     protected string $paginationTheme = 'tailwind';
 
-    public function updatingSearch(): void { $this->resetPage(); }
-    public function updatingFilterCategory(): void { $this->resetPage(); }
-    public function updatingFilterLocation(): void { $this->resetPage(); }
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterCategory(): void
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterLocation(): void
+    {
+        $this->resetPage();
+    }
 
     public function openModal(): void
     {
@@ -129,11 +138,12 @@ class MenuManager extends Component
         $this->name = $menu->name;
         $this->description = $menu->description ?? '';
         $this->price = (string) $menu->price;
-        
-        // Pemetaan value lama jika ada
+
         $pOption = $menu->purchase_option ?? 'Dine In Only';
-        if ($pOption === 'In Store' || $pOption === 'in_store') $pOption = 'Dine In Only';
-        if ($pOption === 'WhatsApp Order' || $pOption === 'Online / Delivery') $pOption = 'Take Away';
+        if ($pOption === 'In Store' || $pOption === 'in_store')
+            $pOption = 'Dine In Only';
+        if ($pOption === 'WhatsApp Order' || $pOption === 'Online / Delivery')
+            $pOption = 'Take Away';
         $this->purchase_option = $pOption;
 
         $this->location = $menu->location ?? 'all';
@@ -156,30 +166,140 @@ class MenuManager extends Component
         $this->successMessage = 'Menu berhasil dihapus!';
     }
 
-    // Modal Kategori Methods
-    public function openCategoryModal(): void { $this->isCategoryOpen = true; $this->categoryName = ''; $this->editingCategoryId = null; $this->resetValidation(); }
-    public function closeCategoryModal(): void { $this->isCategoryOpen = false; $this->categoryName = ''; $this->editingCategoryId = null; $this->resetValidation(); }
+    // ==========================================
+    // MODAL KATEGORI METHODS & REORDERING
+    // ==========================================
+    public function openCategoryModal(): void
+    {
+        $this->isCategoryOpen = true;
+        $this->categoryName = '';
+        $this->editingCategoryId = null;
+        $this->resetValidation();
+    }
+
+    public function closeCategoryModal(): void
+    {
+        $this->isCategoryOpen = false;
+        $this->categoryName = '';
+        $this->editingCategoryId = null;
+        $this->resetValidation();
+    }
 
     public function saveCategory(): void
     {
         $this->validate(['categoryName' => 'required|string|max:100']);
+
         if ($this->editingCategoryId) {
             $cat = Category::where('type', 'menu')->findOrFail($this->editingCategoryId);
             $oldName = $cat->name;
-            $cat->update(['name' => $this->categoryName, 'slug' => Str::slug($this->categoryName)]);
+            $cat->update([
+                'name' => $this->categoryName,
+                'slug' => Str::slug($this->categoryName)
+            ]);
             Menu::where('category', $oldName)->update(['category' => $this->categoryName]);
             $this->successMessage = 'Kategori menu berhasil diperbarui!';
         } else {
-            Category::create(['name' => $this->categoryName, 'slug' => Str::slug($this->categoryName), 'type' => 'menu']);
+            // Berikan order tertinggi berikutnya
+            $maxOrder = Category::where('type', 'menu')->max('order') ?? 0;
+
+            Category::create([
+                'name' => $this->categoryName,
+                'slug' => Str::slug($this->categoryName),
+                'type' => 'menu',
+                'order' => $maxOrder + 1,
+            ]);
             $this->successMessage = 'Kategori menu baru berhasil ditambahkan!';
         }
+
         $this->categoryName = '';
         $this->editingCategoryId = null;
     }
 
-    public function editCategory(int $id): void { $cat = Category::where('type', 'menu')->findOrFail($id); $this->editingCategoryId = $cat->id; $this->categoryName = $cat->name; }
-    public function cancelEditCategory(): void { $this->editingCategoryId = null; $this->categoryName = ''; $this->resetValidation(); }
-    public function deleteCategory(int $id): void { Category::where('type', 'menu')->findOrFail($id)->delete(); $this->successMessage = 'Kategori berhasil dihapus!'; }
+    public function editCategory(int $id): void
+    {
+        $cat = Category::where('type', 'menu')->findOrFail($id);
+        $this->editingCategoryId = $cat->id;
+        $this->categoryName = $cat->name;
+    }
+
+    public function cancelEditCategory(): void
+    {
+        $this->editingCategoryId = null;
+        $this->categoryName = '';
+        $this->resetValidation();
+    }
+
+    public function deleteCategory(int $id): void
+    {
+        Category::where('type', 'menu')->findOrFail($id)->delete();
+        $this->successMessage = 'Kategori berhasil dihapus!';
+    }
+
+    // Method Menaikkan Posisi Kategori (▲)
+    public function moveCategoryUp(int $categoryId): void
+    {
+        $categories = Category::where('type', 'menu')
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $currentIndex = $categories->search(fn($c) => $c->id === $categoryId);
+
+        if ($currentIndex !== false && $currentIndex > 0) {
+            $previousCategory = $categories[$currentIndex - 1];
+            $currentCategory = $categories[$currentIndex];
+
+            $currentOrder = $currentCategory->order ?? $currentIndex;
+            $prevOrder = $previousCategory->order ?? ($currentIndex - 1);
+
+            // Jika nilai order sama/konflik, bedakan offset nilainya
+            if ($currentOrder === $prevOrder) {
+                $currentOrder = $currentIndex;
+                $prevOrder = $currentIndex - 1;
+            }
+
+            $currentCategory->order = $prevOrder;
+            $previousCategory->order = $currentOrder;
+
+            $currentCategory->save();
+            $previousCategory->save();
+
+            $this->successMessage = "Urutan kategori '{$currentCategory->name}' berhasil dinaikkan.";
+        }
+    }
+
+    // Method Menurunkan Posisi Kategori (▼)
+    public function moveCategoryDown(int $categoryId): void
+    {
+        $categories = Category::where('type', 'menu')
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $currentIndex = $categories->search(fn($c) => $c->id === $categoryId);
+
+        if ($currentIndex !== false && $currentIndex < $categories->count() - 1) {
+            $nextCategory = $categories[$currentIndex + 1];
+            $currentCategory = $categories[$currentIndex];
+
+            $currentOrder = $currentCategory->order ?? $currentIndex;
+            $nextOrder = $nextCategory->order ?? ($currentIndex + 1);
+
+            // Jika nilai order sama/konflik, bedakan offset nilainya
+            if ($currentOrder === $nextOrder) {
+                $currentOrder = $currentIndex;
+                $nextOrder = $currentIndex + 1;
+            }
+
+            $currentCategory->order = $nextOrder;
+            $nextCategory->order = $currentOrder;
+
+            $currentCategory->save();
+            $nextCategory->save();
+
+            $this->successMessage = "Urutan kategori '{$currentCategory->name}' berhasil diturunkan.";
+        }
+    }
 
     #[Layout('layouts.admin')]
     public function render()
@@ -198,11 +318,27 @@ class MenuManager extends Component
             $query->where('location', $this->filterLocation);
         }
 
-        $categoryList = Category::where('type', 'menu')->orderBy('name', 'asc')->get();
+        // Ambil data kategori berurutan berdasarkan kolom 'order'
+        $categoryList = Category::where('type', 'menu')
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
         return view('livewire.admin.menu-manager', [
             'menus' => $query->paginate(8),
             'categories' => $categoryList,
         ]);
+    }
+
+    // Method untuk menyimpan urutan baru hasil drag and drop
+    public function reorderCategories(array $orderedIds): void
+    {
+        foreach ($orderedIds as $index => $id) {
+            Category::where('id', $id)->where('type', 'menu')->update([
+                'order' => $index + 1
+            ]);
+        }
+
+        $this->successMessage = 'Urutan kategori berhasil disimpan!';
     }
 }

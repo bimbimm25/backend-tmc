@@ -32,7 +32,7 @@ class MerchandiseManager extends Component
     public mixed $image = null;
     public ?string $oldImage = null;
     public bool $is_featured = false;
-    public bool $is_best_seller = false; // <-- Field Best Seller
+    public bool $is_best_seller = false;
 
     // Modal Kategori
     public bool $isCategoryOpen = false;
@@ -80,7 +80,7 @@ class MerchandiseManager extends Component
         $this->image = null;
         $this->oldImage = null;
         $this->is_featured = false;
-        $this->is_best_seller = false; // <-- Reset status ke false
+        $this->is_best_seller = false;
         $this->resetValidation();
     }
 
@@ -95,7 +95,7 @@ class MerchandiseManager extends Component
             'purchase_type' => 'required|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'is_featured' => 'boolean',
-            'is_best_seller' => 'boolean', // <-- Validasi boolean
+            'is_best_seller' => 'boolean',
         ]);
 
         $imagePath = $this->oldImage;
@@ -119,7 +119,7 @@ class MerchandiseManager extends Component
                 'purchase_type' => $this->purchase_type,
                 'image' => $imagePath,
                 'is_featured' => $this->is_featured,
-                'is_best_seller' => $this->is_best_seller, // <-- Simpan ke database
+                'is_best_seller' => $this->is_best_seller,
             ]
         );
 
@@ -137,7 +137,6 @@ class MerchandiseManager extends Component
         $this->price = (string) $item->price;
         $this->stock_status = $item->stock_status ?? 'available';
 
-        // Konversi value lama ke value constraint
         $pType = $item->purchase_type ?? 'in_store';
         if ($pType === 'In Store')
             $pType = 'in_store';
@@ -149,7 +148,7 @@ class MerchandiseManager extends Component
 
         $this->oldImage = $item->image;
         $this->is_featured = (bool) $item->is_featured;
-        $this->is_best_seller = (bool) $item->is_best_seller; // <-- Load nilai dari model
+        $this->is_best_seller = (bool) $item->is_best_seller;
 
         $this->isOpen = true;
     }
@@ -165,7 +164,9 @@ class MerchandiseManager extends Component
         $this->successMessage = 'Merchandise berhasil dihapus!';
     }
 
-    // Category Management Methods
+    // ==========================================
+    // Category Management & Reordering Methods
+    // ==========================================
     public function openCategoryModal(): void
     {
         $this->isCategoryOpen = true;
@@ -185,16 +186,29 @@ class MerchandiseManager extends Component
     public function saveCategory(): void
     {
         $this->validate(['categoryName' => 'required|string|max:100']);
+
         if ($this->editingCategoryId) {
             $cat = Category::where('type', 'merchandise')->findOrFail($this->editingCategoryId);
             $oldName = $cat->name;
-            $cat->update(['name' => $this->categoryName, 'slug' => Str::slug($this->categoryName)]);
+            $cat->update([
+                'name' => $this->categoryName,
+                'slug' => Str::slug($this->categoryName),
+            ]);
             Merchandise::where('category', $oldName)->update(['category' => $this->categoryName]);
             $this->successMessage = 'Kategori berhasil diperbarui!';
         } else {
-            Category::create(['name' => $this->categoryName, 'slug' => Str::slug($this->categoryName), 'type' => 'merchandise']);
+            // Ambil order tertinggi saat ini agar kategori baru berada di urutan paling bawah
+            $maxOrder = Category::where('type', 'merchandise')->max('order') ?? 0;
+
+            Category::create([
+                'name' => $this->categoryName,
+                'slug' => Str::slug($this->categoryName),
+                'type' => 'merchandise',
+                'order' => $maxOrder + 1,
+            ]);
             $this->successMessage = 'Kategori baru berhasil ditambahkan!';
         }
+
         $this->categoryName = '';
         $this->editingCategoryId = null;
     }
@@ -219,6 +233,20 @@ class MerchandiseManager extends Component
         $this->successMessage = 'Kategori berhasil dihapus!';
     }
 
+    // Method pembaruan urutan hasil Drag & Drop dari SortableJS
+    public function reorderCategories(array $orderedIds): void
+    {
+        foreach ($orderedIds as $index => $id) {
+            Category::where('id', $id)
+                ->where('type', 'merchandise')
+                ->update([
+                    'order' => $index + 1
+                ]);
+        }
+
+        $this->successMessage = 'Urutan kategori merchandise berhasil disimpan!';
+    }
+
     #[Layout('layouts.admin')]
     public function render()
     {
@@ -236,7 +264,11 @@ class MerchandiseManager extends Component
             $query->where('stock_status', $this->filterStatus);
         }
 
-        $categoryList = Category::where('type', 'merchandise')->orderBy('name', 'asc')->get();
+        // Ambil kategori khusus merchandise yang terurut berdasarkan kolom order
+        $categoryList = Category::where('type', 'merchandise')
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
         return view('livewire.admin.merchandise-manager', [
             'merchandises' => $query->paginate(8),
