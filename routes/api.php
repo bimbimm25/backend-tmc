@@ -157,42 +157,49 @@ Route::get('/roblox-data', [RobloxApiController::class, 'index']);
 Route::post('/roblox/claim', [RobloxApiController::class, 'submitClaim']);
 
 
-// ==========================================
-// 5. MODUL KARIR & FORM PELAMAR (EMAIL)
-// ==========================================
-Route::get('/careers', function () {
-    $careers = Career::where('is_active', true)
-        ->latest()
-        ->get();
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Berhasil mengambil lowongan karir aktif',
-        'data' => $careers
-    ], 200);
-});
-
 Route::post('/careers/apply', function (Request $request) {
+    // 1. Validasi fleksibel untuk perangkat mobile & cloud storage
     $validated = $request->validate([
         'career_id' => 'required|exists:careers,id',
         'full_name' => 'required|string|max:255',
         'email' => 'required|email|max:255',
-        'phone' => 'required|string|max:20',
+        'phone' => 'required|string|max:30',
         'cover_letter' => 'nullable|string',
-        'resume' => 'required|file|mimes:pdf,doc,docx|max:5120',
+        'resume' => [
+            'required',
+            'file',
+            'max:10240', // Naikkan kapasitas hingga 10MB
+            // Izinkan MIME type dokumen standar dan octet-stream untuk file dari cloud/mobile
+            'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/octet-stream',
+        ],
+    ], [
+        'resume.max' => 'Ukuran file CV maksimal 10MB.',
+        'resume.mimetypes' => 'Format file harus berupa PDF atau Word (DOC/DOCX).',
     ]);
 
-    if ($request->hasFile('resume')) {
-        $validated['resume_path'] = $request->file('resume')->store('resumes', 'public');
+    // 2. Simpan berkas dengan penamaan yang aman
+    if ($request->hasFile('resume') && $request->file('resume')->isValid()) {
+        $file = $request->file('resume');
+
+        // Ambil ekstensi asli atau fallback ke pdf
+        $extension = strtolower($file->getClientOriginalExtension());
+        if (!in_array($extension, ['pdf', 'doc', 'docx'])) {
+            $extension = 'pdf';
+        }
+
+        $safeFileName = 'CV_' . time() . '_' . \Illuminate\Support\Str::random(10) . '.' . $extension;
+        $validated['resume_path'] = $file->storeAs('resumes', $safeFileName, 'public');
     }
 
+    // 3. Simpan data pelamar ke database
     $application = JobApplication::create($validated);
 
+    // 4. Kirim notifikasi email
     $ownerEmail = env('OWNER_EMAIL', 'owner@tomeetcafe.com');
     try {
         Mail::to($ownerEmail)->send(new NewApplicantNotification($application));
     } catch (\Exception $e) {
-
+        \Illuminate\Support\Facades\Log::warning('Gagal mengirim email pelamar: ' . $e->getMessage());
     }
 
     return response()->json([
@@ -201,7 +208,6 @@ Route::post('/careers/apply', function (Request $request) {
         'data' => $application
     ], 201);
 });
-
 
 // ==========================================
 // 6. MODUL BLOG, CATEGORIES & SEO STORIES
